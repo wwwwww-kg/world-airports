@@ -32,16 +32,23 @@ def search(request):
     raw_results = local_data_wrapper.query().bindings
 
     ## Filter with fuzzy search
-    MINIMUM_RATIO = 50
+    MINIMUM_RATIO = 90
     print(query)
-    weighted_results = process.extract(query, raw_results, scorer=fuzz.token_set_ratio, limit=100)
     legible_results = []
-    for (result, ratio) in weighted_results:
+    for entry in raw_results:
+        airport_name = entry["airport_name"].value
+        ratio = fuzz.partial_token_set_ratio(airport_name, query)
+
         if ratio >= MINIMUM_RATIO:
-            legible_results.append(result)
+            print(ratio)
+            legible_results.append([entry, ratio])
+
+    ## Sort legible results
+    sorted_results = sorted(legible_results, key=lambda x:x[1], reverse=True)
+    print(sorted_results)
     
     context = {
-        'search_results': legible_results,
+        'search_results': sorted_results,
     }
     response = render(request, 'search_results.html', context)
     return response
