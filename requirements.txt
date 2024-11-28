@@ -1,6 +1,6 @@
 asgiref
 Django
-fuzzywuzzy
+thefuzz
 gunicorn
 isodate
 pyparsing
