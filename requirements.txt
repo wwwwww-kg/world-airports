@@ -10,3 +10,4 @@ SPARQLWrapper
 sqlparse
 tzdata
 whitenoise
+django-environ
