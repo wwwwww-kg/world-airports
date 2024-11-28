@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<ul>
+{% for i in search_results %}
+    <li>{{ i }}</li>
+{% endfor %}
+</ul>
+
+{% endblock content %}
