@@ -1,0 +1,12 @@
+asgiref
+Django
+fuzzywuzzy
+gunicorn
+isodate
+pyparsing
+rdflib
+six
+SPARQLWrapper
+sqlparse
+tzdata
+whitenoise
