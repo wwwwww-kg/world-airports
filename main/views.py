@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from SPARQLWrapper import SPARQLWrapper2, JSON
+from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
 import environ
 
@@ -32,12 +32,12 @@ def search(request):
     raw_results = local_data_wrapper.query().bindings
 
     ## Filter with fuzzy search
-    MINIMUM_RATIO = 90
+    MINIMUM_RATIO = 70
     print(query)
     legible_results = []
     for entry in raw_results:
         airport_name = entry["airport_name"].value
-        ratio = fuzz.partial_token_set_ratio(airport_name, query)
+        ratio = fuzz.token_set_ratio(airport_name.lower(), query)
 
         if ratio >= MINIMUM_RATIO:
             print(ratio)
