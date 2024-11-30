@@ -5,10 +5,24 @@
 
 {% include 'search_bar.html' %}
 
-<ul>
-{% for i in search_results %}
-    <li>{{ i.0.airport_name.value }}</li>
-{% endfor %}
-</ul>
+{% if search_results %}
+    <ul>
+    {% for i in search_results %}
+        <li>{{ i.airport_name.value }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No airport found with the keyword <b>{{ request.GET.q }}</b></p>
+{% endif %}
+
+{% if similar_results %}
+    <p>You might be looking for: </p>
+    <ul>
+    {% for i in similar_results %}
+        <li>{{ i.airport_name.value }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
 
 {% endblock content %}
