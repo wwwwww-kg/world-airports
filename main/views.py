@@ -84,3 +84,10 @@ def search(request):
     response = render(request, 'search_results.html', context)
     return response
     
+def airport_detail(request):
+    ''' Menampilkan halaman detail bandara '''
+    return
+
+def country_detail(request):
+    ''' Menampilkan halaman detail negara '''
+    return
