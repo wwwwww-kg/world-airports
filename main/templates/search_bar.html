@@ -1,0 +1,10 @@
+{% load static %}
+
+<div class="row d-flex justify-content-center">
+    <form method="GET" action="" class="col-lg-6">
+        <div class="input-group mb-3 search-bar">
+            <input type="text" class="form-control" placeholder="Search for an airport..." aria-label="Search" aria-describedby="search-bar" name="q" value="{{ request.GET.q }}">
+            <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+    </form>
+</div>

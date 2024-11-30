@@ -3,10 +3,38 @@
 
 {% block content %}
 
-<ul>
-{% for i in search_results %}
-    <li>{{ i }}</li>
-{% endfor %}
-</ul>
+{% include 'search_bar.html' %}
+
+<div class="">
+    <div class="search-results px-3 d-grid gap-4">
+        {% if search_results %}
+            {% for i in search_results %}
+                <div class="card border-0">
+                    <div class="card-body p-0">
+                        <h5 class="card-title">
+                            <a class="link-underline-opacity-0" href="{% url 'search' %}">{{ i.airport_name.value }}</a>
+                            <span class="badge text-sm text-bg-secondary">{{ i.airport_iata.value }}</span>
+                        </h5>
+                        <h6 class="card-subtitle text-body-secondary">
+                             {{ i.region_name.value }}, {{ i.country_name.value }}
+                        </h6>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No airport found with the keyword <b>{{ request.GET.q }}</b></p>
+        {% endif %}
+    </div>
+    <div class="search-suggestions">
+        {% if similar_results %}
+            <div class='fs-6'>
+                <span class='fs-6 fst-italic'>You might be looking for: </span>
+                {% for i in similar_results %}
+                    <a href="{% url 'search' %}">{{ i.airport_name.value }}</a><span>, </span>
+                {% endfor %}
+              </div>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock content %}
