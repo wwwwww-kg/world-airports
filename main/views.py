@@ -24,12 +24,13 @@ def search(request):
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
 
-    SELECT ?airport_iri ?airport_name ?region_name ?country_name WHERE {{
+    SELECT ?airport_iri ?airport_name ?airport_iata ?region_name ?country_name WHERE {{
             ?airport_iri a [rdfs:label "Airport"];
                 rdfs:label ?airport_name;
                 v:region ?region_node .
             ?region_node rdfs:label ?region_name;
                 v:countryCode [v:country [rdfs:label ?country_name]] .
+            OPTIONAL {{ ?airport_iri v:iataCode ?airport_iata. }}
             FILTER CONTAINS(LCASE(?airport_name), "%s") .
     }} ORDER BY ?airport_name
     """ % query)
@@ -71,12 +72,10 @@ def search(request):
                 entry["search_weight_ratio"] = ratio
                 print(entry)
                 legible_results.append(entry)
-            if len(legible_results) > MAXIMUM_RESULTS:
-                break
 
         ## Sort top similar results
         if len(legible_results) > 0:
-            sorted_similars = sorted(legible_results, key=lambda x:x["search_weight_ratio"], reverse=True)
+            sorted_similars = sorted(legible_results, key=lambda x:x["search_weight_ratio"], reverse=True)[:MAXIMUM_RESULTS]
     
     context = {
         'search_results': sorted_results,
