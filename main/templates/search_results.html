@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load highlight %}
 
 {% block content %}
 
@@ -12,7 +13,7 @@
                 <div class="card border-0">
                     <div class="card-body p-0">
                         <h5 class="card-title">
-                            <a class="link-underline-opacity-0" href="{% url 'search' %}">{{ i.airport_name.value }}</a>
+                            <a class="link-underline-opacity-0" href="{% url 'search' %}">{{ i.airport_name.value|highlight_query:request.GET.q }}</a>
                             <span class="badge text-sm text-bg-secondary">{{ i.airport_iata.value }}</span>
                         </h5>
                         <h6 class="card-subtitle text-body-secondary">
