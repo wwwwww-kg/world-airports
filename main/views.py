@@ -3,6 +3,8 @@ from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
 import environ
 
+from main.query import get_airport_detail
+
 # Setup environment variables
 env = environ.Env()
 environ.Env.read_env()
@@ -84,10 +86,74 @@ def search(request):
     response = render(request, 'search_results.html', context)
     return response
     
-def airport_detail(request):
+def airport_detail(request, IRI):
     ''' Menampilkan halaman detail bandara '''
-    return
+    
+    local_data_wrapper = SPARQLWrapper2(base_iri)
+    ## Get airport details
+    local_data_wrapper.setQuery(get_airport_detail(IRI))
+    raw_results = local_data_wrapper.query().bindings
 
-def country_detail(request):
+    raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
+
+    raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
+
+        ## Attempt to get more relevant information from remote source DBPedia
+    dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
+    airport_name = raw_results[0]['airportName'].value
+
+    dbpedia_data_wrapper.setQuery("""
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX dbp: <http://dbpedia.org/property/>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+
+    SELECT ?resource_page ?abstract ?thumbnail
+    WHERE {
+        ?resource_page a <http://dbpedia.org/ontology/Airport> ;
+                dbo:abstract ?abstract ;
+                dbp:name "%s"@en .
+        FILTER (LANG(?abstract) = "en")
+    } LIMIT 1
+    """ % airport_name)
+
+    dbpedia_data = dbpedia_data_wrapper.query().bindings
+
+    print(dbpedia_data)
+
+    context = {
+        'airport_detail': raw_results[0],
+        'dbpedia_data': dbpedia_data[0]
+    }
+
+    response = render(request, 'airport_detail.html', context)
+    return response
+
+def country_detail(request, IRI):
     ''' Menampilkan halaman detail negara '''
     return
+
+def replace_uri_with_iri(uri):
+    iri = uri.replace("http://world-airports-kg.up.railway.app/data/", "")
+    return iri
+
+def process_runways(runways_data):
+    runways = runways_data.split(";")
+    processed_runways = []
+    
+    for runway in runways:
+        # Split each runway data by space
+        runway_params = runway.split(" ")
+
+        # Create a dictionary for each runway
+        runway_dict = {
+            "length": runway_params[0] if len(runway_params) > 0 else "-",
+            "width": runway_params[1] if len(runway_params) > 1 else "-",
+            "surfaceType": runway_params[2] if len(runway_params) > 2 else "-",
+            "isLighted": runway_params[3] if len(runway_params) > 3 else "-",
+            "isClosed": runway_params[4] if len(runway_params) > 4 else "-"
+        }
+
+        # Add the dictionary to the list of processed runways
+        processed_runways.append(runway_dict)
+
+    return processed_runways
