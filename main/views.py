@@ -4,6 +4,8 @@ from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
 import environ
 
+from main.query import get_airport_detail
+
 # Setup environment variables
 env = environ.Env()
 environ.Env.read_env()
@@ -106,29 +108,19 @@ def search(request):
     
 def airport_detail(request, IRI):
     ''' Menampilkan halaman detail bandara '''
-
-    ## Attempt to get every relevant airport data from local RDF
-    local_data_wrapper = SPARQLWrapper2(base_iri)
-    airport_uri = create_uri_from_iri(IRI)
-    print(airport_uri)
-
-    local_data_wrapper.setQuery("""                                
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
-
-    SELECT ?airport_name WHERE {
-            %s a [rdfs:label "Airport"];
-                rdfs:label ?airport_name .
-    }
-    """ % airport_uri)
     
-    airport_data = local_data_wrapper.query().bindings[0]
-    print(airport_data)
+    local_data_wrapper = SPARQLWrapper2(base_iri)
+    ## Get airport details
+    local_data_wrapper.setQuery(get_airport_detail(IRI))
+    raw_results = local_data_wrapper.query().bindings
 
-    ## Attempt to get more relevant information from remote source DBPedia
+    raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
+
+    raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
+
+        ## Attempt to get more relevant information from remote source DBPedia
     dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
-    airport_name = airport_data['airport_name'].value
-    print(airport_name)
+    airport_name = raw_results[0]['airportName'].value
 
     dbpedia_data_wrapper.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -140,20 +132,43 @@ def airport_detail(request, IRI):
         ?resource_page a <http://dbpedia.org/ontology/Airport> ;
                 dbo:abstract ?abstract ;
                 dbp:name "%s"@en .
-                                  
         FILTER (LANG(?abstract) = "en")
     } LIMIT 1
     """ % airport_name)
 
     dbpedia_data = dbpedia_data_wrapper.query().bindings
-    print("DB", dbpedia_data)
+
+    print(dbpedia_data)
 
     context = {
-        'airport_data': airport_data,
-        'dpedia_queries': dbpedia_data,
+        'airport_detail': raw_results[0],
+        'dbpedia_data': dbpedia_data[0]
     }
-    response = render(request, 'index.html', context)
+
+    response = render(request, 'airport_detail.html', context)
     return response
+
+def process_runways(runways_data):
+    runways = runways_data.split(";")
+    processed_runways = []
+    
+    for runway in runways:
+        # Split each runway data by space
+        runway_params = runway.split(" ")
+
+        # Create a dictionary for each runway
+        runway_dict = {
+            "length": runway_params[0] if len(runway_params) > 0 else "-",
+            "width": runway_params[1] if len(runway_params) > 1 else "-",
+            "surfaceType": runway_params[2] if len(runway_params) > 2 else "-",
+            "isLighted": runway_params[3] if len(runway_params) > 3 else "-",
+            "isClosed": runway_params[4] if len(runway_params) > 4 else "-"
+        }
+
+        # Add the dictionary to the list of processed runways
+        processed_runways.append(runway_dict)
+
+    return processed_runways
 
 def country_detail(request, country_iri):
     ''' Menampilkan halaman detail negara '''
