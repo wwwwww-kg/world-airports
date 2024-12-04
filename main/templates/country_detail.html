@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load highlight %}
+
+{% block content %}
+
+{% include 'search_bar.html' %}
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        top: 0;
+    }
+
+    .country-detail {
+        text-align: left;
+        padding: 8px;
+    }
+
+    .key {
+        font-weight: bold;
+    }
+
+    .country-name {
+        text-align: center;
+    }
+</style>
+
+<div>
+    {% for i in country_details %}
+    <h1>Country Details</h1>
+
+    <table>
+        <tbody>
+            <tr>
+                <td class="key">Country Name:</td>
+                <td>{{ i.countryName.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Population Count:</td>
+                <td>{{ i.populationCount.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Located In:</td>
+                <td>{{ i.locatedIn.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Area Size:</td>
+                <td>{{ i.areaSize.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Population Density:</td>
+                <td>{{ i.populationDensity.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Coastline Ratio:</td>
+                <td>{{ i.coastlineRatio.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Net Migration:</td>
+                <td>{{ i.netMigration.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Infant Mortality Rate:</td>
+                <td>{{ i.infantMortalityRate.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">GDP in USD:</td>
+                <td>{{ i.gdpInUSD.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Literacy Percentage:</td>
+                <td>{{ i.literacyPercentage.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Phones Per Thousand:</td>
+                <td>{{ i.phonesPerThousand.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Arable Land Percentage:</td>
+                <td>{{ i.arableLandPercentage.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Crops Land Percentage:</td>
+                <td>{{ i.cropsLandPercentage.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Other Land Percentage:</td>
+                <td>{{ i.otherLandPercentage.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Birth Rate:</td>
+                <td>{{ i.birthrate.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Death Rate:</td>
+                <td>{{ i.deathrate.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Agriculture GDP:</td>
+                <td>{{ i.agricultureGDP.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Industry GDP:</td>
+                <td>{{ i.industryGDP.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Service GDP:</td>
+                <td>{{ i.serviceGDP.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">Climate Type:</td>
+                <td>{{ i.climateType.value }}</td>
+            </tr>
+            <tr>
+                <td class="key">List of Airports:</td>
+                <td>
+                    <ul>
+                        {% for airport in airports %}
+                            <li><a href="/airport/{{ airport.airport_iri.value }}">{{ airport.airport_name.value }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    {% endfor %}
+</div>
+
+{% endblock content %}
