@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        {% if page_title == nil %}
+        {% if page_title == nil or page_title == "homepage" %}
             <title>World Airports</title>
         {% else %}
             <title>{{ page_title }} - World Airports</title>
@@ -37,6 +37,12 @@
             {% endblock content %}
             </div>
         </main>
+
+        {% if page_title != "homepage" %}
+        <footer class="sticky-bottom px-5 py-3 top-100">
+            {% include 'footer.html' %}
+        </footer>
+        {% endif %}
 
         {% block scripts %}
         {% endblock scripts %}
