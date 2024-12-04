@@ -1,3 +1,4 @@
+from http.client import HTTPResponse
 from django.shortcuts import render
 from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
@@ -8,6 +9,15 @@ env = environ.Env()
 environ.Env.read_env()
 graphdb_host = env("GRAPHDB_HOST")
 base_iri = env("BASE_IRI")
+
+# Helper function to remove the host part
+def replace_uri_with_iri(uri):
+    iri = uri.replace(graphdb_host + "/data/", "")
+    return iri
+
+def create_uri_from_iri(iri):
+    uri = "<" + graphdb_host + "/data/" + iri + ">"
+    return uri
 
 # Create your views here.
 def index(request):
@@ -88,6 +98,87 @@ def airport_detail(request):
     ''' Menampilkan halaman detail bandara '''
     return
 
-def country_detail(request):
+def country_detail(request, country_iri):
     ''' Menampilkan halaman detail negara '''
-    return
+    
+    # Initialize SPARQLWrapper for the first query
+    local_data_wrapper = SPARQLWrapper2(base_iri)
+    country_iri = country_iri.replace('_', ' ').title().replace(' ', '_')
+    country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
+    
+    # Construct the first query
+    local_data_wrapper.setQuery(f"""                                 
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
+    
+    SELECT DISTINCT ?countryName 
+        ?populationCount 
+        ?locatedIn 
+        ?areaSize 
+        ?populationDensity 
+        ?coastlineRatio 
+        ?netMigration 
+        ?infantMortalityRate 
+        ?gdpInUSD 
+        ?literacyPercentage 
+        ?phonesPerThousand 
+        ?arableLandPercentage 
+        ?cropsLandPercentage 
+        ?otherLandPercentage 
+        ?birthrate 
+        ?deathrate 
+        ?agricultureGDP 
+        ?industryGDP 
+        ?serviceGDP 
+        ?climateType
+    WHERE {{
+        {country_iri} rdfs:label ?countryName ;
+                v:populationCount ?populationCount ;
+                v:locatedIn ?locatedIn ;
+                v:areaSize ?areaSize ;
+                v:populationDensity ?populationDensity ;
+                v:coastlineRatio ?coastlineRatio ;
+                
+        OPTIONAL {{ {country_iri} v:netMigration ?netMigration . }}
+        OPTIONAL {{ {country_iri} v:infantMortalityRate ?infantMortalityRate . }}
+        OPTIONAL {{ {country_iri} v:gdpInUSD ?gdpInUSD . }}
+        OPTIONAL {{ {country_iri} v:literacyPercentage ?literacyPercentage . }}
+        OPTIONAL {{ {country_iri} v:phonesPerThousand ?phonesPerThousand . }}
+        OPTIONAL {{ {country_iri} v:arableLandPercentage ?arableLandPercentage . }}
+        OPTIONAL {{ {country_iri} v:cropsLandPercentage ?cropsLandPercentage . }}
+        OPTIONAL {{ {country_iri} v:otherLandPercentage ?otherLandPercentage . }}
+        OPTIONAL {{ {country_iri} v:birthrate ?birthrate . }}
+        OPTIONAL {{ {country_iri} v:deathrate ?deathrate . }}
+        OPTIONAL {{ {country_iri} v:agricultureGDP ?agricultureGDP . }}
+        OPTIONAL {{ {country_iri} v:industryGDP ?industryGDP . }}
+        OPTIONAL {{ {country_iri} v:serviceGDP ?serviceGDP . }}
+        OPTIONAL {{ {country_iri} v:climateType ?climateType . }}
+    }}""")
+
+    country_details = local_data_wrapper.query().bindings
+
+    # Reinitialize SPARQLWrapper for the second query
+    local_data_wrapper = SPARQLWrapper2(base_iri)
+    
+    # Construct the second query to get the airports related to the country
+    local_data_wrapper.setQuery(f"""                                 
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
+    
+    SELECT DISTINCT ?airport_name ?region ?country_iri ?airport_iri WHERE {{
+        ?airport_iri a [rdfs:label "Airport"];
+                    rdfs:label ?airport_name ;
+                    v:region ?region .
+        ?region v:countryCode [v:country {country_iri}]
+    }}""")
+
+    airports = local_data_wrapper.query().bindings
+
+    for airport in airports:
+        airport["airport_iri"].value = replace_uri_with_iri(airport["airport_iri"].value)
+
+    context = {
+        'country_details': country_details,
+        'airports': airports,
+    }
+    return render(request, 'country_detail.html', context)
