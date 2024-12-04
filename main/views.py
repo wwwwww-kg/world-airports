@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
 import environ
@@ -21,7 +22,15 @@ def create_uri_from_iri(iri):
 # Create your views here.
 def index(request):
     ''' Menampilkan halaman utama '''
-    return render(request, "index.html")
+    query = request.GET.get("q")
+
+    if query != None:
+        return redirect(reverse("search") + "?q=" + query)
+
+    context = {
+        'page_title': "homepage",
+    }
+    return render(request, "index.html", context)
 
 def search(request):
     ''' Menampilkan hasil pencarian '''
