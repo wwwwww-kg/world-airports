@@ -25,10 +25,11 @@
     </head>
 
     <body class="min-vh-100">
-        <header class="sticky-top">
+        <header class="">
+            {% include 'logo.html' %}
         </header>
 
-        <main class="pt-md-4 pt-3 mx-2">
+        <main class="pt-md-2 pt-1 mx-2">
             <div class="container-xxl">
             {% block content %}
             {% endblock content %}
