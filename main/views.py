@@ -172,20 +172,14 @@ def process_runways(runways_data):
 
 def country_detail(request, country_iri_param):
     ''' Menampilkan halaman detail negara '''
-    
-    # Initialize SPARQLWrapper for the first query
     ends_with_period = country_iri_param.endswith('.')
-    # print(country_iri_param)
     local_data_wrapper = SPARQLWrapper2(base_iri)
     country_iri = country_iri_param.replace('_', ' ').title().replace(' ', '_')
     if("bosnia" in country_iri.lower()):
         country_iri = "Bosnia_and_Herzegovina"
 
-    coutnry_iri = "Central_African_Rep."
-    print(country_iri)
     country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
-    
-    # Construct the first query
+
     local_data_wrapper.setQuery(f"""                                 
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
@@ -211,13 +205,15 @@ def country_detail(request, country_iri_param):
         ?serviceGDP 
         ?climateType
     WHERE {{
-        {country_iri} rdfs:label ?countryName ;
-                v:populationCount ?populationCount ;
-                v:locatedIn ?locatedIn ;
-                v:areaSize ?areaSize ;
-                v:populationDensity ?populationDensity ;
-                v:coastlineRatio ?coastlineRatio ;
-                
+        {country_iri} 
+            rdfs:label ?countryName ;
+            v:populationCount ?populationCount ;
+            v:locatedIn ?locatedIn ;
+            v:areaSize ?areaSize ;
+            v:populationDensity ?populationDensity ;
+            v:coastlineRatio ?coastlineRatio ;
+        
+        OPTIONAL {{ {country_iri} rdfs:label ?countryName . }}          
         OPTIONAL {{ {country_iri} v:netMigration ?netMigration . }}
         OPTIONAL {{ {country_iri} v:infantMortalityRate ?infantMortalityRate . }}
         OPTIONAL {{ {country_iri} v:gdpInUSD ?gdpInUSD . }}
