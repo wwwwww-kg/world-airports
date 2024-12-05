@@ -172,12 +172,8 @@ def process_runways(runways_data):
 
 def country_detail(request, country_iri_param):
     ''' Menampilkan halaman detail negara '''
-    ends_with_period = country_iri_param.endswith('.')
     local_data_wrapper = SPARQLWrapper2(base_iri)
     country_iri = country_iri_param.replace('_', ' ').title().replace(' ', '_')
-    if("bosnia" in country_iri.lower()):
-        country_iri = "Bosnia_and_Herzegovina"
-
     country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
 
     local_data_wrapper.setQuery(f"""                                 
