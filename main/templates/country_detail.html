@@ -31,12 +31,20 @@
     <div class="country-info-box-wrapper col-12 col-md-5">
         <div class="country-info-box bg-light border border-secondary border-1 d-flex flex-column p-2 fs-6 w-100">
             <div class="bg-primary text-bg-primary text-center p-1"> 
-                <span class="fw-semibold">{{ dbpedia_data.0.conventionalLongName.value }}</span>
+                <span class="fw-semibold">
+                    {% if dbpedia_data.0.thumbnail.value %}
+                    {{ dbpedia_data.0.conventionalLongName.value }}
+                    {% else %}
+                    {{ country_details.countryName.value }}
+                    {% endif %}
+                </span>
             </div>
-
+            
+            {% if dbpedia_data.0.thumbnail.value %}
             <div class="my-2 d-flex justify-content-center w-100">
                 <img src="{{dbpedia_data.0.thumbnail.value}}" alt="Flag of {{ dbpedia_data.0.conventionalLongName.value }}">
             </div>
+            {% endif %}
 
             <div class="bg-secondary text-bg-secondary text-center px-1 mb-1"> 
                 <span class="fw-semibold">Geography</span>
