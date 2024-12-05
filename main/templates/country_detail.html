@@ -4,133 +4,174 @@
 
 {% block content %}
 
-<style>
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
+<h1>{{ country_details.countryName.value }}</h1>
+<hr/>
 
-    td {
-        padding: 8px;
-        border: 1px solid #ddd;
-        top: 0;
-    }
+<div class="d-flex gap-4">
+    <div class="airport-list col-7 col-lg-7 col-md-6 col-sm-12 flex-grow-1">
+        <p>Airports in {{ country_details.countryName.value }}</p>
+        <div class="d-grid">
+            {% for airport in airports %}
+            <div class="col-6">
+                <a class="text-decoration-none" href="{% url 'airport_detail' airport_iri=airport.airport_iri.value %}">{{ airport.airport_name.value }}</a></li>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 
-    .country-detail {
-        text-align: left;
-        padding: 8px;
-    }
+    <div class="country-info-box-wrapper col-5 col-lg-5 col-md-6 col-sm-12">
+        <div class="country-info-box bg-light border border-secondary border-1 d-flex flex-column p-2 fs-6 w-100">
+            <div class="bg-secondary text-bg-secondary text-center p-1"> 
+                <span class="fw-semibold">{{ country_details.countryName.value }}</span>
+            </div>
 
-    .key {
-        font-weight: bold;
-    }
+            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+                <span class="fw-semibold">Geography</span>
+            </div>
 
-    .country-name {
-        text-align: center;
-    }
-</style>
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Located In</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.locatedIn.value }}</span></div>
+                </div>
+            </div>
 
-<div>
-    {% for i in country_details %}
-    <h1>Country Details</h1>
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Area Size</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.areaSize.value }}</span></div>
+                </div>
+            </div>
 
-    <table>
-        <tbody>
-            <tr>
-                <td class="key">Country Name:</td>
-                <td>{{ i.countryName.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Population Count:</td>
-                <td>{{ i.populationCount.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Located In:</td>
-                <td>{{ i.locatedIn.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Area Size:</td>
-                <td>{{ i.areaSize.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Population Density:</td>
-                <td>{{ i.populationDensity.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Coastline Ratio:</td>
-                <td>{{ i.coastlineRatio.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Net Migration:</td>
-                <td>{{ i.netMigration.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Infant Mortality Rate:</td>
-                <td>{{ i.infantMortalityRate.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">GDP in USD:</td>
-                <td>{{ i.gdpInUSD.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Literacy Percentage:</td>
-                <td>{{ i.literacyPercentage.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Phones Per Thousand:</td>
-                <td>{{ i.phonesPerThousand.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Arable Land Percentage:</td>
-                <td>{{ i.arableLandPercentage.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Crops Land Percentage:</td>
-                <td>{{ i.cropsLandPercentage.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Other Land Percentage:</td>
-                <td>{{ i.otherLandPercentage.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Birth Rate:</td>
-                <td>{{ i.birthrate.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Death Rate:</td>
-                <td>{{ i.deathrate.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Agriculture GDP:</td>
-                <td>{{ i.agricultureGDP.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Industry GDP:</td>
-                <td>{{ i.industryGDP.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Service GDP:</td>
-                <td>{{ i.serviceGDP.value }}</td>
-            </tr>
-            <tr>
-                <td class="key">Climate Type:</td>
-                <td>{{ i.climateType_description }}</td>
-            </tr>
-            <tr>
-                <td class="key">List of Airports:</td>
-                <td>
-                    <ul>
-                        {% for airport in airports %}
-                            <li><a href="/airport/{{ airport.airport_iri.value }}">{{ airport.airport_name.value }}</a></li>
-                        {% endfor %}
-                    </ul>
-                    
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    {% endfor %}
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Coastline %</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.coastlineRatio.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Climate</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.climateType_description  }}</span></div>
+                </div>
+            </div>
+
+            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+                <span class="fw-semibold">Land Distribution</span>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Arable</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.arableLandPercentage.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Crops</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.cropsLandPercentage.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Other</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.otherLandPercentage.value }}</span></div>
+                </div>
+            </div>
+
+
+            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+                <span class="fw-semibold">Population</span>
+            </div>
+        
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Count</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.populationCount.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Density</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.populationDensity.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Birth rate</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.birthrate.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Death rate</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.deathrate.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Infant m. rate</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.infantMortalityRate.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Net migration</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.netMigration.value }}</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Literacy %</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.literacyPercentage.value }}</span></div>
+                </div>
+            </div>
+
+
+            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+                <span class="fw-semibold">Gross Domestic Product (GDP)</span>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Total</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.gdpInUSD.value }} USD</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Agriculture</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.agricultureGDP.value }} USD</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Industry</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.industryGDP.value }} USD</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Service</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.serviceGDP.value }} USD</span></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
+
 
 {% endblock content %}

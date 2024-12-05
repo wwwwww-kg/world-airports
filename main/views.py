@@ -266,7 +266,7 @@ def country_detail(request, country_iri):
 
     context = {
         'page_title': country_details[0]["countryName"].value,
-        'country_details': country_details,
+        'country_details': country_details[0],
         'airports': airports,
     }
     return render(request, 'country_detail.html', context)
