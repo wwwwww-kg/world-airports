@@ -124,6 +124,17 @@
           </div>
         </div>
 
+        <div class="flex flex-row">
+          <div class="flex row">
+            <div class="col-4">
+              <span class="fw-semibold">Lower Identification</span>
+            </div>
+            <div class="col-8 flex-grow-1">
+              <span>{{ runway.lowerIdent }}</span>
+            </div>
+          </div>
+        </div>
+
         <div class="text-end w-100 text-primary">
           <span class="fw-bold"> {{ forloop.counter }} </span>
           <span> {% if runway.isLighted %}💡{%else%}🔅{% endif %} </span>
