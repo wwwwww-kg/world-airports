@@ -233,7 +233,7 @@ def country_detail(request, country_iri):
     country_details = local_data_wrapper.query().bindings
 
     # Reinitialize SPARQLWrapper for the second query
-    local_data_wrapper = SPARQLWrapper2(base_iri)
+    local_data_wrapper = SPARQLWrapper2(local_rdf)
     
     # Construct the second query to get the airports related to the country
     local_data_wrapper.setQuery(f"""                                 
