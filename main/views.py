@@ -115,12 +115,11 @@ def airport_detail(request, IRI):
     raw_results = local_data_wrapper.query().bindings
 
     raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
-
     raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
 
         ## Attempt to get more relevant information from remote source DBPedia
     dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
-    airport_name = raw_results[0]['airportName'].value
+    airport_name = raw_results[0]['airportName'].value.replace("-", "–")
 
     dbpedia_data_wrapper.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -137,12 +136,14 @@ def airport_detail(request, IRI):
     """ % airport_name)
 
     dbpedia_data = dbpedia_data_wrapper.query().bindings
-
-    print(dbpedia_data)
+    if len(dbpedia_data) == 0:
+        dbpedia_data = []
+    else:
+        dbpedia_data = dbpedia_data[0]
 
     context = {
         'airport_detail': raw_results[0],
-        'dbpedia_data': dbpedia_data[0]
+        'dbpedia_data': dbpedia_data
     }
 
     response = render(request, 'airport_detail.html', context)
