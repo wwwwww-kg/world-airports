@@ -4,7 +4,7 @@ from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
 import environ
 
-from main.query import get_airport_detail
+from main.query import get_airport_detail, get_navaids
 
 # Setup environment variables
 env = environ.Env()
@@ -118,7 +118,12 @@ def airport_detail(request, airport_iri):
     raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
     raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
 
-        ## Attempt to get more relevant information from remote source DBPedia
+    local_data_wrapper.setQuery(get_navaids(airport_iri))
+    raw_navaids = local_data_wrapper.query().bindings
+    navaids_data = process_navaids(raw_navaids[0]['navaids'].value)
+    navaids_data[0]['countryIRI'] = replace_uri_with_iri(navaids_data[0]['countryIRI'])
+
+    ## Attempt to get more relevant information from remote source DBPedia
     dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
     airport_name = raw_results[0]['airportName'].value.replace("-", "–")
 
@@ -127,11 +132,12 @@ def airport_detail(request, airport_iri):
     PREFIX dbp: <http://dbpedia.org/property/>
     PREFIX dbo: <http://dbpedia.org/ontology/>
 
-    SELECT ?resource_page ?abstract ?thumbnail
+    SELECT ?resource_page ?abstract ?thumbnail ?openedDate
     WHERE {
         ?resource_page a <http://dbpedia.org/ontology/Airport> ;
                 dbo:abstract ?abstract ;
-                dbp:name "%s"@en .
+                dbp:name "%s"@en ;
+                dbp:opened ?openedDate .
         FILTER (LANG(?abstract) = "en")
     } LIMIT 1
     """ % airport_name)
@@ -141,12 +147,13 @@ def airport_detail(request, airport_iri):
         dbpedia_data = []
     else:
         dbpedia_data = dbpedia_data[0]
-
+    
     context = {
         'page_title': airport_name,
         'airport_detail': raw_results[0],
         'dbpedia_data': dbpedia_data,
         'airport_iri': airport_iri,
+        'navaids_data': navaids_data
     }
 
     response = render(request, 'airport_detail.html', context)
@@ -155,6 +162,9 @@ def airport_detail(request, airport_iri):
 def process_runways(runways_data):
     runways = runways_data.split(";")
     processed_runways = []
+
+    if runways_data == "- - - - -":
+        return []
     
     for runway in runways:
         # Split each runway data by space
@@ -270,3 +280,36 @@ def country_detail(request, country_iri):
         'airports': airports,
     }
     return render(request, 'country_detail.html', context)
+
+def process_navaids(navaids_data):
+    navaids = navaids_data.split(";")
+    processed_navaids = []
+
+    if navaids_data == "- - - - - - - - - - -":
+        return []
+    
+    for navaid in navaids:
+        # Split each runway data by space
+        navaid_params = navaid.split(" ")
+
+        # Create a dictionary for each runway
+        navaid_dict = {
+            "name": navaid_params[0] if len(navaid_params) > 0 else "-",
+            "navType": navaid_params[1] if len(navaid_params) > 1 else "-",
+            "freq": navaid_params[2] if len(navaid_params) > 2 else "-",
+            "latitude": navaid_params[3] if len(navaid_params) > 3 else "-",
+            "longitude": navaid_params[4] if len(navaid_params) > 4 else "-",
+            "elevationFt": navaid_params[5] if len(navaid_params) > 5 else "-",
+            "countryIRI": navaid_params[6] if len(navaid_params) > 6 else "-",
+            "countryName": navaid_params[7] if len(navaid_params) > 7 else "-",
+            "magneticVarDeg": navaid_params[8] if len(navaid_params) > 8 else "-",
+            "usageType": navaid_params[9] if len(navaid_params) > 9 else "-",
+            "powerUsage": navaid_params[10] if len(navaid_params) > 10 else "-",
+            "navId": navaid_params[11] if len(navaid_params) > 11 else "-"
+        }
+
+        # Add the dictionary to the list of processed runways
+        processed_navaids.append(navaid_dict)
+
+    return processed_navaids
+
