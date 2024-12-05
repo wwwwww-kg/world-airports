@@ -44,13 +44,16 @@ def search(request):
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
 
-    SELECT ?airport_iri ?airport_name ?airport_iata ?region_name ?country_name WHERE {{
+    SELECT ?airport_iri ?airport_name ?airport_iata ?region_name ?country_name ?airport_gpscode ?airport_localcode 
+    WHERE {{
             ?airport_iri a [rdfs:label "Airport"];
                 rdfs:label ?airport_name;
                 v:region ?region_node .
             ?region_node rdfs:label ?region_name;
                 v:countryCode [v:country [rdfs:label ?country_name]] .
             OPTIONAL {{ ?airport_iri v:iataCode ?airport_iata. }}
+            OPTIONAL {{ ?airport_iri v:gpsCode ?airport_gpscode. }}
+            OPTIONAL {{ ?airport_iri v:airportLocalCode ?airport_localcode. }}
             FILTER CONTAINS(LCASE(?airport_name), "%s") .
     }} ORDER BY ?airport_name LIMIT 50
     """ % query)
@@ -123,25 +126,27 @@ def airport_detail(request, airport_iri):
     local_data_wrapper.setQuery(get_navaids(airport_iri))
     raw_navaids = local_data_wrapper.query().bindings
     navaids_data = process_navaids(raw_navaids[0]['navaids'].value)
-    navaids_data[0]['countryIRI'] = replace_uri_with_iri(navaids_data[0]['countryIRI'])
+    if navaids_data != []:
+        navaids_data[0]['countryIRI'] = replace_uri_with_iri(navaids_data[0]['countryIRI'])
 
     ## Attempt to get more relevant information from remote source DBPedia
     dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
     airport_name = raw_results[0]['airportName'].value.replace("-", "–")
 
-    dbpedia_data_wrapper.setQuery("""
+    dbpedia_data_wrapper.setQuery(f"""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX dbp: <http://dbpedia.org/property/>
     PREFIX dbo: <http://dbpedia.org/ontology/>
 
     SELECT ?resource_page ?abstract ?thumbnail ?openedDate
-    WHERE {
+    WHERE {{
         ?resource_page a <http://dbpedia.org/ontology/Airport> ;
                 dbo:abstract ?abstract ;
                 dbp:name "%s"@en ;
                 dbp:opened ?openedDate .
         FILTER (LANG(?abstract) = "en")
-    } LIMIT 1
+        OPTIONAL {{ ?resource_page dbo:thumbnail ?thumbnail. }}
+    }} LIMIT 1
     """ % airport_name)
 
     dbpedia_data = dbpedia_data_wrapper.query().bindings
@@ -327,12 +332,14 @@ def process_navaids(navaids_data):
     navaids = navaids_data.split(";")
     processed_navaids = []
 
-    if navaids_data == "- - - - - - - - - - -":
+    if navaids_data == "-%-%-%-%-%-%-%-%-%-%-%-":
         return []
     
     for navaid in navaids:
         # Split each runway data by space
-        navaid_params = navaid.split(" ")
+        navaid_params = navaid.split("%")
+        print(navaid_params)
+        print(len(navaid_params))
 
         # Create a dictionary for each runway
         navaid_dict = {
@@ -348,6 +355,35 @@ def process_navaids(navaids_data):
             "powerUsage": navaid_params[10] if len(navaid_params) > 10 else "-",
             "navId": navaid_params[11] if len(navaid_params) > 11 else "-"
         }
+
+        ## Convert to legible name
+        navType = navaid_dict["navType"]
+        if navType == "VOR":
+            navaid_dict["navTypeInfo"] = "Civilian VOR without a colocated DME."
+        elif navType == "VOR-DME":
+            navaid_dict["navTypeInfo"] = "Civilian VOR with a colocated DME."
+        elif navType == "VORTAC":
+            navaid_dict["navTypeInfo"] = "Civilian VOR colocated with a military TACAN (also usable as a DME)."
+        elif navType == "TACAN":
+            navaid_dict["navTypeInfo"] = "Military TACAN without a colocated civilian VOR, usable by civilians as a DME."
+        elif navType == "NDB":
+            navaid_dict["navTypeInfo"] = "Non-directional beacon without a colocated DME."
+        elif navType == "NDB-DME":
+            navaid_dict["navTypeInfo"] = "Non-direction beacon with a colocated DME."
+        elif navType == "DME":
+            navaid_dict["navTypeInfo"] = "Standalone distance-measuring equipment."
+        
+        usageType = navaid_dict["usageType"]
+        if usageType == "HI":
+            navaid_dict["usageTypeInfo"] = "High-altitude airways"
+        elif usageType == "LO":
+            navaid_dict["usageTypeInfo"] = "Low-altitude airways"
+        elif usageType == "BOTH":
+            navaid_dict["usageTypeInfo"] = "High- and low-altitude airways"
+        elif usageType == "TERM":
+            navaid_dict["usageTypeInfo"] = "Terminal-area navigation only"
+        elif usageType == "RNAV":
+            navaid_dict["usageTypeInfo"] = "Non-GPS area navigation"
 
         # Add the dictionary to the list of processed runways
         processed_navaids.append(navaid_dict)

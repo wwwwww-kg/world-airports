@@ -67,17 +67,17 @@ def get_navaids(airport_iri):
         SELECT 
         (GROUP_CONCAT(CONCAT(
            "", IF(BOUND(?navName), str(?navName), "-"), 
-           " ", IF(BOUND(?navType), str(?navType), "-"), 
-           " ", IF(BOUND(?navFreq), str(?navFreq), "-"), 
-           " ", IF(BOUND(?navLatDeg), str(?navLatDeg), "-"), 
-           " ", IF(BOUND(?navLongDeg), str(?navLongDeg), "-"),
-           " ", IF(BOUND(?navElevationFt), str(?navElevationFt), "-"),
-           " ", IF(BOUND(?countryIRI), str(?countryIRI), "-"),
-           " ", IF(BOUND(?countryName), str(?countryName), "-"), 
-           " ", IF(BOUND(?navMagDeg), str(?navMagDeg), "-"),
-           " ", IF(BOUND(?navUsageType), str(?navUsageType), "-"),
-           " ", IF(BOUND(?navPowerUsage), str(?navPowerUsage), "-"),
-           " ", IF(BOUND(?navId), str(?navId), "-")
+           "%", IF(BOUND(?navType), str(?navType), "-"), 
+           "%", IF(BOUND(?navFreq), str(?navFreq), "-"), 
+           "%", IF(BOUND(?navLatDeg), str(?navLatDeg), "-"), 
+           "%", IF(BOUND(?navLongDeg), str(?navLongDeg), "-"),
+           "%", IF(BOUND(?navElevationFt), str(?navElevationFt), "-"),
+           "%", IF(BOUND(?countryIRI), str(?countryIRI), "-"),
+           "%", IF(BOUND(?countryName), str(?countryName), "-"), 
+           "%", IF(BOUND(?navMagDeg), str(?navMagDeg), "-"),
+           "%", IF(BOUND(?navUsageType), str(?navUsageType), "-"),
+           "%", IF(BOUND(?navPowerUsage), str(?navPowerUsage), "-"),
+           "%", IF(BOUND(?navId), str(?navId), "-")
            ); separator = ";") AS ?navaids)
         WHERE {{
             
