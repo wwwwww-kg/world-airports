@@ -9,15 +9,15 @@ from main.query import get_airport_detail
 # Setup environment variables
 env = environ.Env()
 environ.Env.read_env()
-graphdb_host = env("GRAPHDB_HOST")
+local_rdf = env("LOCAL_RDF_HOST")
 base_iri = env("BASE_IRI")
 
 def replace_uri_with_iri(uri):
-    iri = uri.replace(graphdb_host + "/data/", "")
+    iri = uri.replace(base_iri + "/data/", "")
     return iri
 
 def create_uri_from_iri(iri):
-    uri = "<" + graphdb_host + "/data/" + iri + ">"
+    uri = "<" + base_iri + "/data/" + iri + ">"
     return uri
 
 # Create your views here.
@@ -37,7 +37,7 @@ def search(request):
     ''' Menampilkan hasil pencarian '''
 
     query = request.GET.get("q").lower()
-    local_data_wrapper = SPARQLWrapper2(base_iri)
+    local_data_wrapper = SPARQLWrapper2(local_rdf)
 
     ## Attempt to get basic airport data via SPARQL with FILTER
     local_data_wrapper.setQuery(f"""                                
@@ -73,7 +73,7 @@ def search(request):
         ## Find similar with fuzzy search
         local_data_wrapper.setQuery(f"""                                
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX v:<{graphdb_host}/data/verb/>
+        PREFIX v:<{base_iri}/data/verb/>
 
         SELECT ?airport_iri ?airport_name ?region_name ?country_name WHERE {{
             ?airport_iri a [rdfs:label "Airport"];
@@ -100,6 +100,7 @@ def search(request):
             sorted_similars = sorted(legible_results, key=lambda x:x["search_weight_ratio"], reverse=True)[:MAXIMUM_RESULTS]
     
     context = {
+        'page_title': "Search results for \"" + request.GET.get("q") + "\"",
         'search_results': sorted_results,
         'similar_results': sorted_similars,
     }
@@ -109,7 +110,7 @@ def search(request):
 def airport_detail(request, airport_iri):
     ''' Menampilkan halaman detail bandara '''
     
-    local_data_wrapper = SPARQLWrapper2(base_iri)
+    local_data_wrapper = SPARQLWrapper2(local_rdf)
     ## Get airport details
     local_data_wrapper.setQuery(get_airport_detail(airport_iri))
     raw_results = local_data_wrapper.query().bindings
@@ -176,7 +177,7 @@ def country_detail(request, country_iri):
     ''' Menampilkan halaman detail negara '''
     
     # Initialize SPARQLWrapper for the first query
-    local_data_wrapper = SPARQLWrapper2(base_iri)
+    local_data_wrapper = SPARQLWrapper2(local_rdf)
     country_iri = country_iri.replace('_', ' ').title().replace(' ', '_')
     country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
     
@@ -252,6 +253,7 @@ def country_detail(request, country_iri):
         airport["airport_iri"].value = replace_uri_with_iri(airport["airport_iri"].value)
 
     context = {
+        'page_title': country_details[0]["countryName"].value,
         'country_details': country_details,
         'airports': airports,
     }
