@@ -69,7 +69,6 @@ def search(request):
             entry["airport_iri"].value = replace_uri_with_iri(entry["airport_iri"].value)
             ratio = fuzz.token_sort_ratio(query, airport_name.lower())
             entry["search_weight_ratio"] = ratio
-            print(airport_name, query, ratio)
         sorted_results = sorted(matching_results, key=lambda x:x["search_weight_ratio"], reverse=True)
 
     else:
@@ -95,7 +94,6 @@ def search(request):
             if ratio >= MINIMUM_RATIO:
                 entry["search_weight_ratio"] = ratio
                 entry["airport_iri"].value = replace_uri_with_iri(entry["airport_iri"].value)
-                print(entry)
                 legible_results.append(entry)
 
         ## Sort top similar results
@@ -343,8 +341,6 @@ def process_navaids(navaids_data):
     for navaid in navaids:
         # Split each runway data by space
         navaid_params = navaid.split("%")
-        print(navaid_params)
-        print(len(navaid_params))
 
         # Create a dictionary for each runway
         navaid_dict = {
