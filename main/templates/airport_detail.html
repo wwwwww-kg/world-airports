@@ -1,31 +1,50 @@
 {% extends 'base.html' %} {% load static %} {% block content %}
 <h1>{{ airport_detail.airportName.value }}</h1>
 <hr />
-<div class="d-flex gap-4">
-  <div class="airport-big-info col-7 col-lg-7 col-md-6 col-sm-12 flex-grow-1">
-    {% if dbpedia_data.abstract.value %}
-    <p>{{ dbpedia_data.abstract.value }}</p>
-    {% endif %}
-  </div>
-  <div class="airport-info-box-wrapper col-5 col-lg-5 col-md-6 col-sm-12">
-    <div
-      class="airport-info-box bg-light border border-secondary border-1 d-flex flex-column p-2 fs-6 w-100"
-    >
-      <div class="bg-secondary text-bg-secondary text-center p-1">
+{% if dbpedia_data.abstract.value %}
+  <div class="d-flex flex-md-row flex-column-reverse gap-4">
+    <div class="airport-big-info flex-grow-1">
+      <p style="text-align: justify;">{{ dbpedia_data.abstract.value }}</p>
+      <div class="airport-info-box-wrapper col-12 col-md-5">
+    </div>
+{% else %}
+<div class="d-flex flex-md-row flex-column-reverse gap-4 justify-content-center">
+    <div class="airport-info-box-wrapper col-5">
+{% endif %}
+    <div class="airport-info-box bg-light border border-secondary border-1 d-flex flex-column p-2 fs-6 w-100">
+      <div class="bg-primary text-bg-primary text-center p-1">
         <span class="fw-semibold">{{ airport_detail.airportName.value }}</span>
       </div>
 
+      {% if dbpedia_data.thumbnail %}
+      <div class="my-2 d-flex justify-content-center w-100">
+        <img src="{{dbpedia_data.thumbnail.value}}" alt="Thumbnail of {{ airport_detail.airportName.value }}">
+      </div>
+    {% endif %}
+
       <div class="text-center mb-1">
+        {% if airport_detail.airportIATA %}
         <span class="fw-semibold">IATA: </span>
-        <span class="badge text-sm text-bg-primary"
-          >{{ airport_detail.airportIATA.value }}</span
-        >
+        <span class="badge text-sm text-bg-primary">{{ airport_detail.airportIATA.value }}</span>
         <span>•</span>
+        {% endif %}
         <span class="fw-semibold">ICAO: </span>
         <span class="badge text-sm text-bg-secondary">{{ airport_iri }}</span>
+
+        {% if airport_detail.gpsCode %}
+        <span>•</span>
+        <span class="fw-semibold">GPS: </span>
+        <span class="badge text-sm text-bg-secondary">{{ airport_detail.gpsCode.value }}</span>
+        {% endif %}
+
+        {% if airport_detail.airportLocalCode %}
+        <span>•</span>
+        <span class="fw-semibold">LOCAL: </span>
+        <span class="badge text-sm text-bg-secondary">{{ airport_detail.airportLocalCode.value }}</span>
+        {% endif %}
       </div>
 
-      <div class="bg-secondary text-bg-secondary text-center px-1">
+      <div class="bg-secondary text-bg-secondary text-center px-1 my-1">
         <span class="fw-semibold">Summary</span>
       </div>
 
@@ -37,6 +56,17 @@
           </div>
         </div>
       </div>
+
+      {% if dbpedia_data.openedDate %}
+      <div class="flex flex-row">
+        <div class="flex row">
+          <div class="col-4"><span class="fw-bold">Opened</span></div>
+          <div class="col-8 flex-grow-1">
+            <span>{{ dbpedia_data.openedDate.value }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
 
       <div class="flex flex-row">
         <div class="flex row">
@@ -80,23 +110,12 @@
         </div>
       </div>
 
-      <div class="flex flex-row">
-        <div class="flex row">
-          <div class="col-4"><span class="fw-bold">Opened Date</span></div>
-          <div class="col-8 flex-grow-1">
-            <span>{{ dbpedia_data.openedDate.value }}</span>
-          </div>
-        </div>
-      </div>
-
       {% if airport_detail.runways.value %}
-      <div class="bg-secondary text-bg-secondary text-center px-1 mt-1">
+      <div class="bg-secondary text-bg-secondary text-center px-1 mt-2 my-1">
         <span class="fw-semibold">Runways</span>
       </div>
       {% for runway in airport_detail.runways.value %}
-      <div
-        class="runway-entry flex flex-column w-100 bg-primary-subtle p-1 mt-1"
-      >
+      <div class="runway-entry flex flex-column w-100 bg-primary-subtle p-1 mt-1">
         <div class="flex flex-row">
           <div class="flex row">
             <div class="col-4"><span class="fw-semibold">Length</span></div>
@@ -127,7 +146,7 @@
         <div class="flex flex-row">
           <div class="flex row">
             <div class="col-4">
-              <span class="fw-semibold">Lower Identification</span>
+              <span class="fw-semibold">Lower ID</span>
             </div>
             <div class="col-8 flex-grow-1">
               <span>{{ runway.lowerIdent }}</span>
@@ -136,14 +155,13 @@
         </div>
 
         <div class="text-end w-100 text-primary">
-          <span class="fw-bold"> {{ forloop.counter }} </span>
-          <span> {% if runway.isLighted %}💡{%else%}🔅{% endif %} </span>
-          <span> {% if runway.isClosed %}⛔{%else%}✅{% endif %} </span>
+          <span>{% if runway.isLighted %}<abbr title="Runway is lighted">💡</abbr> {%else%}<abbr title="Runway is not lighted">🔅</abbr>{% endif %} </span>
+          <span> {% if runway.isClosed %}<abbr title="Runway is closed">⛔</abbr>{%else%}<abbr title="Runway is open">✅</abbr>{% endif %} </span>
         </div>
       </div>
 
       {% endfor %} {% endif %} {% if navaids_data %}
-      <div class="bg-secondary text-bg-secondary text-center px-1 mt-1">
+      <div class="bg-secondary text-bg-secondary text-center px-1 mt-2 my-1">
         <span class="fw-semibold">Navaids</span>
       </div>
       {% for navaid in navaids_data %}
@@ -154,7 +172,7 @@
           <div class="flex row">
             <div class="col-4"><span class="fw-semibold">Name</span></div>
             <div class="col-8 flex-grow-1">
-              <span>{{ navaid.name }}</span>
+              <span class="fw-semibold">{{ navaid.name }}</span>
             </div>
           </div>
         </div>
@@ -163,7 +181,7 @@
           <div class="flex row">
             <div class="col-4"><span class="fw-semibold">Type</span></div>
             <div class="col-8 flex-grow-1">
-              <span>{{ navaid.navType }}</span>
+              <span><abbr title="{{ navaid.navTypeInfo }}">{{ navaid.navType }}</abbr></span>
             </div>
           </div>
         </div>
@@ -191,10 +209,10 @@
         <div class="flex flex-row">
           <div class="flex row">
             <div class="col-4">
-              <span class="fw-semibold">Elevation in Feet</span>
+              <span class="fw-semibold">Elevation</span>
             </div>
             <div class="col-8 flex-grow-1">
-              <span>{{ navaid.elevationFt }}</span>
+              <span>{{ navaid.elevationFt }} ft</span>
             </div>
           </div>
         </div>
@@ -217,10 +235,10 @@
         <div class="flex flex-row">
           <div class="flex row">
             <div class="col-4">
-              <span class="fw-semibold">Magnetic Variation Degree</span>
+              <span class="fw-semibold">Magnetic Variation</span>
             </div>
             <div class="col-8 flex-grow-1">
-              <span>{{ navaid.magneticVarDeg }}</span>
+              <span>{{ navaid.magneticVarDeg }}°</span>
             </div>
           </div>
         </div>
@@ -231,7 +249,7 @@
               <span class="fw-semibold">Usage Type</span>
             </div>
             <div class="col-8 flex-grow-1">
-              <span>{{ navaid.usageType }}</span>
+              <span><abbr title="{{ navaid.usageTypeInfo }}">{{ navaid.usageType }}</abbr></span>
             </div>
           </div>
         </div>
@@ -256,12 +274,6 @@
               <span>{{ navaid.navId }}</span>
             </div>
           </div>
-        </div>
-
-        <div class="text-end w-100 text-primary">
-          <span class="fw-bold"> {{ forloop.counter }} </span>
-          <span> {% if runway.isLighted %}💡{%else%}🔅{% endif %} </span>
-          <span> {% if runway.isClosed %}⛔{%else%}✅{% endif %} </span>
         </div>
       </div>
 
