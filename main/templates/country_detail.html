@@ -7,25 +7,38 @@
 <h1>{{ country_details.countryName.value }}</h1>
 <hr/>
 
-<div class="d-flex gap-4">
-    <div class="airport-list col-7 col-lg-7 col-md-6 col-sm-12 flex-grow-1">
-        <p>Airports in {{ country_details.countryName.value }}</p>
-        <div class="d-grid">
+<div class="d-flex flex-md-row flex-column-reverse gap-4">
+    <div class="airport-list flex-grow-1">
+        <span>Airports in {{ country_details.countryName.value }}</span>
+        <div class="d-grid ms-2">
             {% for airport in airports %}
-            <div class="col-6">
-                <a class="text-decoration-none" href="{% url 'airport_detail' airport_iri=airport.airport_iri.value %}">{{ airport.airport_name.value }}</a></li>
-            </div>
+            <li class="flex-wrap">
+                <a class="text-decoration-none" href="{% url 'airport_detail' airport_iri=airport.airport_iri.value %}">{{ airport.airport_name.value }}</a>
+            </li>
             {% endfor %}
+            {% if airports|length >= 100 %}
+            <p class="fst-italic text-secondary">
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-info-circle mb-1 me-1" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                    </svg>
+            </span>Airport list limited to 100 results</p>
+            {% endif %}
         </div>
     </div>
 
-    <div class="country-info-box-wrapper col-5 col-lg-5 col-md-6 col-sm-12">
+    <div class="country-info-box-wrapper col-12 col-md-5">
         <div class="country-info-box bg-light border border-secondary border-1 d-flex flex-column p-2 fs-6 w-100">
-            <div class="bg-secondary text-bg-secondary text-center p-1"> 
-                <span class="fw-semibold">{{ country_details.countryName.value }}</span>
+            <div class="bg-primary text-bg-primary text-center p-1"> 
+                <span class="fw-semibold">{{ dbpedia_data.0.conventionalLongName.value }}</span>
             </div>
 
-            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+            <div class="my-2 d-flex justify-content-center w-100">
+                <img src="{{dbpedia_data.0.thumbnail.value}}" alt="Flag of {{ dbpedia_data.0.conventionalLongName.value }}">
+            </div>
+
+            <div class="bg-secondary text-bg-secondary text-center px-1 mb-1"> 
                 <span class="fw-semibold">Geography</span>
             </div>
 
@@ -57,7 +70,7 @@
                 </div>
             </div>
 
-            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+            <div class="bg-secondary text-bg-secondary text-center px-1 my-1"> 
                 <span class="fw-semibold">Land Distribution</span>
             </div>
 
@@ -83,7 +96,7 @@
             </div>
 
 
-            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+            <div class="bg-secondary text-bg-secondary text-center px-1 m-1"> 
                 <span class="fw-semibold">Population</span>
             </div>
         
@@ -136,8 +149,15 @@
                 </div>
             </div>
 
+            <div class="flex flex-row">
+                <div class="flex row">
+                    <div class="col-4"><span class="fw-bold">Phones per thousand</span></div>
+                    <div class="col-8 flex-grow-1"><span>{{ country_details.phonesPerThousand.value }}</span></div>
+                </div>
+            </div>
 
-            <div class="bg-secondary text-bg-secondary text-center px-1"> 
+
+            <div class="bg-secondary text-bg-secondary text-center px-1 my-1"> 
                 <span class="fw-semibold">Gross Domestic Product (GDP)</span>
             </div>
 

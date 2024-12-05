@@ -4,7 +4,7 @@ from SPARQLWrapper import SPARQLWrapper2
 from thefuzz import fuzz, process
 import environ
 
-from main.query import get_airport_detail
+from main.query import get_airport_detail, get_navaids
 
 # Setup environment variables
 env = environ.Env()
@@ -44,13 +44,16 @@ def search(request):
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
 
-    SELECT ?airport_iri ?airport_name ?airport_iata ?region_name ?country_name WHERE {{
+    SELECT ?airport_iri ?airport_name ?airport_iata ?region_name ?country_name ?airport_gpscode ?airport_localcode 
+    WHERE {{
             ?airport_iri a [rdfs:label "Airport"];
                 rdfs:label ?airport_name;
                 v:region ?region_node .
             ?region_node rdfs:label ?region_name;
                 v:countryCode [v:country [rdfs:label ?country_name]] .
             OPTIONAL {{ ?airport_iri v:iataCode ?airport_iata. }}
+            OPTIONAL {{ ?airport_iri v:gpsCode ?airport_gpscode. }}
+            OPTIONAL {{ ?airport_iri v:airportLocalCode ?airport_localcode. }}
             FILTER CONTAINS(LCASE(?airport_name), "%s") .
     }} ORDER BY ?airport_name LIMIT 50
     """ % query)
@@ -66,7 +69,6 @@ def search(request):
             entry["airport_iri"].value = replace_uri_with_iri(entry["airport_iri"].value)
             ratio = fuzz.token_sort_ratio(query, airport_name.lower())
             entry["search_weight_ratio"] = ratio
-            print(airport_name, query, ratio)
         sorted_results = sorted(matching_results, key=lambda x:x["search_weight_ratio"], reverse=True)
 
     else:
@@ -92,7 +94,6 @@ def search(request):
             if ratio >= MINIMUM_RATIO:
                 entry["search_weight_ratio"] = ratio
                 entry["airport_iri"].value = replace_uri_with_iri(entry["airport_iri"].value)
-                print(entry)
                 legible_results.append(entry)
 
         ## Sort top similar results
@@ -111,29 +112,44 @@ def airport_detail(request, airport_iri):
     ''' Menampilkan halaman detail bandara '''
     
     local_data_wrapper = SPARQLWrapper2(local_rdf)
+
     ## Get airport details
     local_data_wrapper.setQuery(get_airport_detail(airport_iri))
     raw_results = local_data_wrapper.query().bindings
-
     raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
     raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
+    raw_results[0]['latitudeDeg'].value = float(raw_results[0]['latitudeDeg'].value)
+    raw_results[0]['longitudeDeg'].value = float(raw_results[0]['longitudeDeg'].value)
 
-        ## Attempt to get more relevant information from remote source DBPedia
+    if raw_results[0]['hasScheduledService'].value == "true":
+        raw_results[0]['hasScheduledService'].value = "Yes"
+    else:
+        raw_results[0]['hasScheduledService'].value = "No"
+
+    local_data_wrapper.setQuery(get_navaids(airport_iri))
+    raw_navaids = local_data_wrapper.query().bindings
+    navaids_data = process_navaids(raw_navaids[0]['navaids'].value)
+    if navaids_data != []:
+        navaids_data[0]['countryIRI'] = replace_uri_with_iri(navaids_data[0]['countryIRI'])
+
+    ## Attempt to get more relevant information from remote source DBPedia
     dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
     airport_name = raw_results[0]['airportName'].value.replace("-", "–")
 
-    dbpedia_data_wrapper.setQuery("""
+    dbpedia_data_wrapper.setQuery(f"""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX dbp: <http://dbpedia.org/property/>
     PREFIX dbo: <http://dbpedia.org/ontology/>
 
-    SELECT ?resource_page ?abstract ?thumbnail
-    WHERE {
+    SELECT ?resource_page ?abstract ?thumbnail ?openedDate
+    WHERE {{
         ?resource_page a <http://dbpedia.org/ontology/Airport> ;
                 dbo:abstract ?abstract ;
-                dbp:name "%s"@en .
+                dbp:name "%s"@en ;
+                dbp:opened ?openedDate .
         FILTER (LANG(?abstract) = "en")
-    } LIMIT 1
+        OPTIONAL {{ ?resource_page dbo:thumbnail ?thumbnail. }}
+    }} LIMIT 1
     """ % airport_name)
 
     dbpedia_data = dbpedia_data_wrapper.query().bindings
@@ -141,12 +157,13 @@ def airport_detail(request, airport_iri):
         dbpedia_data = []
     else:
         dbpedia_data = dbpedia_data[0]
-
+    
     context = {
         'page_title': airport_name,
         'airport_detail': raw_results[0],
         'dbpedia_data': dbpedia_data,
         'airport_iri': airport_iri,
+        'navaids_data': navaids_data
     }
 
     response = render(request, 'airport_detail.html', context)
@@ -155,6 +172,9 @@ def airport_detail(request, airport_iri):
 def process_runways(runways_data):
     runways = runways_data.split(";")
     processed_runways = []
+
+    if runways_data == "- - - - - -":
+        return []
     
     for runway in runways:
         # Split each runway data by space
@@ -166,7 +186,8 @@ def process_runways(runways_data):
             "width": runway_params[1] if len(runway_params) > 1 else "-",
             "surfaceType": runway_params[2] if len(runway_params) > 2 else "-",
             "isLighted": runway_params[3] if len(runway_params) > 3 else "-",
-            "isClosed": runway_params[4] if len(runway_params) > 4 else "-"
+            "isClosed": runway_params[4] if len(runway_params) > 4 else "-",
+            "lowerIdent": runway_params[5] if len(runway_params) > 5 else "-",
         }
 
         # Add the dictionary to the list of processed runways
@@ -185,11 +206,11 @@ def country_detail(request, country_iri):
     ''' Menampilkan halaman detail negara '''
     
     # Initialize SPARQLWrapper for the first query
+    country_iri_param = country_iri
     local_data_wrapper = SPARQLWrapper2(local_rdf)
     country_iri = country_iri.replace('_', ' ').title().replace(' ', '_')
     country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
-    
-    # Construct the first query
+
     local_data_wrapper.setQuery(f"""                                 
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
@@ -215,13 +236,15 @@ def country_detail(request, country_iri):
         ?serviceGDP 
         ?climateType
     WHERE {{
-        {country_iri} rdfs:label ?countryName ;
-                v:populationCount ?populationCount ;
-                v:locatedIn ?locatedIn ;
-                v:areaSize ?areaSize ;
-                v:populationDensity ?populationDensity ;
-                v:coastlineRatio ?coastlineRatio ;
-                
+        {country_iri} 
+            rdfs:label ?countryName ;
+            v:populationCount ?populationCount ;
+            v:locatedIn ?locatedIn ;
+            v:areaSize ?areaSize ;
+            v:populationDensity ?populationDensity ;
+            v:coastlineRatio ?coastlineRatio ;
+        
+        OPTIONAL {{ {country_iri} rdfs:label ?countryName . }}          
         OPTIONAL {{ {country_iri} v:netMigration ?netMigration . }}
         OPTIONAL {{ {country_iri} v:infantMortalityRate ?infantMortalityRate . }}
         OPTIONAL {{ {country_iri} v:gdpInUSD ?gdpInUSD . }}
@@ -240,14 +263,31 @@ def country_detail(request, country_iri):
 
     country_details = local_data_wrapper.query().bindings
     for item in country_details:
-        # Safely extract the climateType value
         climate_value = item.get("climateType").value if item.get("climateType") else ""
-        # Map the climate value to its description
         item["climateType_description"] = climate_type_mapping.get(climate_value, "Other Climate Classification")
-    # Reinitialize SPARQLWrapper for the second query
+
+        # List of numeric fields to format
+        numeric_fields = [
+            "populationCount", "netMigration", "infantMortalityRate", "gdpInUSD", "literacyPercentage", 
+            "phonesPerThousand", "arableLandPercentage", "cropsLandPercentage", "otherLandPercentage", 
+            "birthrate", "deathrate", "agricultureGDP", "industryGDP", "serviceGDP", "areaSize", "coastlineRatio", "populationDensity"
+        ]
+
+        for field in numeric_fields:
+            if field in item:
+                try:
+                    value = float(item[field].value)
+                    if value.is_integer():
+                        formatted_value = "{:,.0f}".format(value)
+                    else:  
+                        formatted_value = "{:,.3f}".format(value) 
+                    item[field].value = formatted_value
+                except ValueError:
+                    pass
+
+
     local_data_wrapper = SPARQLWrapper2(local_rdf)
     
-    # Construct the second query to get the airports related to the country
     local_data_wrapper.setQuery(f"""                                 
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
@@ -255,18 +295,99 @@ def country_detail(request, country_iri):
     SELECT DISTINCT ?airport_name ?region ?country_iri ?airport_iri WHERE {{
         ?airport_iri a [rdfs:label "Airport"];
                     rdfs:label ?airport_name ;
+                    v:airportType ?airport_type;
                     v:region ?region .
         ?region v:countryCode [v:country {country_iri}]
-    }}""")
+    }} LIMIT 100 """)
 
     airports = local_data_wrapper.query().bindings
 
     for airport in airports:
         airport["airport_iri"].value = replace_uri_with_iri(airport["airport_iri"].value)
 
+    dbpedia_country_name = country_iri_param.replace('_', ' ').title()
+    dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
+    dbpedia_data_wrapper.setQuery("""
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX dbp: <http://dbpedia.org/property/>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+
+    SELECT ?resource_page ?thumbnail ?conventionalLongName
+    WHERE {
+        ?resource_page a <http://dbpedia.org/ontology/Country> ;
+                dbo:thumbnail ?thumbnail ;
+                dbp:conventionalLongName ?conventionalLongName ;
+                rdfs:label "%s" @en .
+    } LIMIT 1
+    """ % dbpedia_country_name)
+
+    dbpedia_data = dbpedia_data_wrapper.query().bindings
+     
     context = {
         'page_title': country_details[0]["countryName"].value,
         'country_details': country_details[0],
         'airports': airports,
+        'dbpedia_data': dbpedia_data
     }
     return render(request, 'country_detail.html', context)
+
+def process_navaids(navaids_data):
+    navaids = navaids_data.split(";")
+    processed_navaids = []
+
+    if navaids_data == "-%-%-%-%-%-%-%-%-%-%-%-":
+        return []
+    
+    for navaid in navaids:
+        # Split each runway data by space
+        navaid_params = navaid.split("%")
+
+        # Create a dictionary for each runway
+        navaid_dict = {
+            "name": navaid_params[0] if len(navaid_params) > 0 else "-",
+            "navType": navaid_params[1] if len(navaid_params) > 1 else "-",
+            "freq": navaid_params[2] if len(navaid_params) > 2 else "-",
+            "coordinates": f"{float(navaid_params[3])}, {float(navaid_params[4])}" if len(navaid_params) > 4 else "-",
+            "elevationFt": navaid_params[5] if len(navaid_params) > 5 else "-",
+            "countryIRI": navaid_params[6] if len(navaid_params) > 6 else "-",
+            "countryName": navaid_params[7] if len(navaid_params) > 7 else "-",
+            "magneticVarDeg": float(navaid_params[8]) if len(navaid_params) > 8 else "-",
+            "usageType": navaid_params[9] if len(navaid_params) > 9 else "-",
+            "powerUsage": navaid_params[10] if len(navaid_params) > 10 else "-",
+            "navId": navaid_params[11] if len(navaid_params) > 11 else "-"
+        }
+
+        ## Convert to legible name
+        navType = navaid_dict["navType"]
+        if navType == "VOR":
+            navaid_dict["navTypeInfo"] = "Civilian VOR without a colocated DME."
+        elif navType == "VOR-DME":
+            navaid_dict["navTypeInfo"] = "Civilian VOR with a colocated DME."
+        elif navType == "VORTAC":
+            navaid_dict["navTypeInfo"] = "Civilian VOR colocated with a military TACAN (also usable as a DME)."
+        elif navType == "TACAN":
+            navaid_dict["navTypeInfo"] = "Military TACAN without a colocated civilian VOR, usable by civilians as a DME."
+        elif navType == "NDB":
+            navaid_dict["navTypeInfo"] = "Non-directional beacon without a colocated DME."
+        elif navType == "NDB-DME":
+            navaid_dict["navTypeInfo"] = "Non-direction beacon with a colocated DME."
+        elif navType == "DME":
+            navaid_dict["navTypeInfo"] = "Standalone distance-measuring equipment."
+        
+        usageType = navaid_dict["usageType"]
+        if usageType == "HI":
+            navaid_dict["usageTypeInfo"] = "High-altitude airways"
+        elif usageType == "LO":
+            navaid_dict["usageTypeInfo"] = "Low-altitude airways"
+        elif usageType == "BOTH":
+            navaid_dict["usageTypeInfo"] = "High- and low-altitude airways"
+        elif usageType == "TERM":
+            navaid_dict["usageTypeInfo"] = "Terminal-area navigation only"
+        elif usageType == "RNAV":
+            navaid_dict["usageTypeInfo"] = "Non-GPS area navigation"
+
+        # Add the dictionary to the list of processed runways
+        processed_navaids.append(navaid_dict)
+
+    return processed_navaids
+
