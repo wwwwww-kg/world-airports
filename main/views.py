@@ -111,12 +111,14 @@ def airport_detail(request, airport_iri):
     ''' Menampilkan halaman detail bandara '''
     
     local_data_wrapper = SPARQLWrapper2(local_rdf)
+
     ## Get airport details
     local_data_wrapper.setQuery(get_airport_detail(airport_iri))
     raw_results = local_data_wrapper.query().bindings
-    print(raw_results)
     raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
     raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
+    raw_results[0]['latitudeDeg'].value = float(raw_results[0]['latitudeDeg'].value)
+    raw_results[0]['longitudeDeg'].value = float(raw_results[0]['longitudeDeg'].value)
 
     local_data_wrapper.setQuery(get_navaids(airport_iri))
     raw_navaids = local_data_wrapper.query().bindings
@@ -298,12 +300,11 @@ def process_navaids(navaids_data):
             "name": navaid_params[0] if len(navaid_params) > 0 else "-",
             "navType": navaid_params[1] if len(navaid_params) > 1 else "-",
             "freq": navaid_params[2] if len(navaid_params) > 2 else "-",
-            "latitude": navaid_params[3] if len(navaid_params) > 3 else "-",
-            "longitude": navaid_params[4] if len(navaid_params) > 4 else "-",
+            "coordinates": f"{float(navaid_params[3])}, {float(navaid_params[4])}" if len(navaid_params) > 4 else "-",
             "elevationFt": navaid_params[5] if len(navaid_params) > 5 else "-",
             "countryIRI": navaid_params[6] if len(navaid_params) > 6 else "-",
             "countryName": navaid_params[7] if len(navaid_params) > 7 else "-",
-            "magneticVarDeg": navaid_params[8] if len(navaid_params) > 8 else "-",
+            "magneticVarDeg": float(navaid_params[8]) if len(navaid_params) > 8 else "-",
             "usageType": navaid_params[9] if len(navaid_params) > 9 else "-",
             "powerUsage": navaid_params[10] if len(navaid_params) > 10 else "-",
             "navId": navaid_params[11] if len(navaid_params) > 11 else "-"
