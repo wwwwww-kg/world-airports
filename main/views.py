@@ -123,6 +123,11 @@ def airport_detail(request, airport_iri):
     raw_results[0]['latitudeDeg'].value = float(raw_results[0]['latitudeDeg'].value)
     raw_results[0]['longitudeDeg'].value = float(raw_results[0]['longitudeDeg'].value)
 
+    if raw_results[0]['hasScheduledService'].value == "true":
+        raw_results[0]['hasScheduledService'].value = "Yes"
+    else:
+        raw_results[0]['hasScheduledService'].value = "No"
+
     local_data_wrapper.setQuery(get_navaids(airport_iri))
     raw_navaids = local_data_wrapper.query().bindings
     navaids_data = process_navaids(raw_navaids[0]['navaids'].value)

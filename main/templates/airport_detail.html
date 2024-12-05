@@ -2,11 +2,11 @@
 <h1>{{ airport_detail.airportName.value }}</h1>
 <hr />
 {% if dbpedia_data.abstract.value %}
-  <div class="d-flex flex-md-row flex-column-reverse gap-4">
+<div class="d-flex flex-md-row flex-column-reverse gap-4">
     <div class="airport-big-info flex-grow-1">
       <p style="text-align: justify;">{{ dbpedia_data.abstract.value }}</p>
-      <div class="airport-info-box-wrapper col-12 col-md-5">
     </div>
+      <div class="airport-info-box-wrapper col-12 col-md-5">
 {% else %}
 <div class="d-flex flex-md-row flex-column-reverse gap-4 justify-content-center">
     <div class="airport-info-box-wrapper col-5">
@@ -73,6 +73,15 @@
           <div class="col-4"><span class="fw-bold">Serves</span></div>
           <div class="col-8 flex-grow-1">
             <span>{{ airport_detail.municipality.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-row">
+        <div class="flex row">
+          <div class="col-4"><span class="fw-bold">Scheduled Service</span></div>
+          <div class="col-8 flex-grow-1">
+            <span>{{ airport_detail.hasScheduledService.value }}</span>
           </div>
         </div>
       </div>
@@ -191,7 +200,7 @@
             <div class="col-4">
               <span class="fw-semibold">Frequency</span>
             </div>
-            <div class="col-8 flex-grow-1"><span>{{ navaid.freq }}</span></div>
+            <div class="col-8 flex-grow-1"><span>{{ navaid.freq }} KHz</span></div>
           </div>
         </div>
 
