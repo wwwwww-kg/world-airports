@@ -66,7 +66,7 @@
           <div class="col-4"><span class="fw-bold">Coordinates</span></div>
           <div class="col-8 flex-grow-1">
             <span>{{ airport_detail.latitudeDeg.value }}, </span
-            ><span>{{ airport_detail.longitudeDeg.value }}, </span>
+            ><span>{{ airport_detail.longitudeDeg.value }} </span>
           </div>
         </div>
       </div>
@@ -179,18 +179,11 @@
 
         <div class="flex flex-row">
           <div class="flex row">
-            <div class="col-4"><span class="fw-semibold">Latitude</span></div>
-            <div class="col-8 flex-grow-1">
-              <span>{{ navaid.latitude }}</span>
+            <div class="col-4">
+              <span class="fw-semibold">Coordinates</span>
             </div>
-          </div>
-        </div>
-
-        <div class="flex flex-row">
-          <div class="flex row">
-            <div class="col-4"><span class="fw-semibold">Longitude</span></div>
             <div class="col-8 flex-grow-1">
-              <span>{{ navaid.longitude }}</span>
+              <span>{{ navaid.coordinates }}</span>
             </div>
           </div>
         </div>
