@@ -13,7 +13,7 @@
                 <div class="card border-0">
                     <div class="card-body p-0">
                         <div class="card-title fw-normal align-items-center col">
-                            <a class="text-decoration-none fs-5 me-1" href="{% url 'airport_detail' IRI=i.airport_iri.value %}">{{ i.airport_name.value|highlight_query:request.GET.q }}</a>
+                            <a class="text-decoration-none fs-5 me-1" href="{% url 'airport_detail' airport_iri=i.airport_iri.value %}">{{ i.airport_name.value|highlight_query:request.GET.q }}</a>
                             <span class="badge text-sm text-bg-primary">{{ i.airport_iri.value }}</span>
                             <span class="badge text-sm text-bg-secondary">{{ i.airport_iata.value }}</span>
                         </div>
@@ -41,7 +41,7 @@
             <div class='fs-6'>
                 <span class='fs-6 fst-italic'>You might be looking for: </span>
                 {% for i in similar_results %}
-                    <a href="{% url 'airport_detail' IRI=i.airport_iri.value %}">{{ i.airport_name.value }}</a><span>, </span>
+                    <a href="{% url 'airport_detail' airport_iri=i.airport_iri.value %}">{{ i.airport_name.value }}</a><span>, </span>
                 {% endfor %}
               </div>
         {% endif %}

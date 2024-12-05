@@ -106,12 +106,12 @@ def search(request):
     response = render(request, 'search_results.html', context)
     return response
     
-def airport_detail(request, IRI):
+def airport_detail(request, airport_iri):
     ''' Menampilkan halaman detail bandara '''
     
     local_data_wrapper = SPARQLWrapper2(base_iri)
     ## Get airport details
-    local_data_wrapper.setQuery(get_airport_detail(IRI))
+    local_data_wrapper.setQuery(get_airport_detail(airport_iri))
     raw_results = local_data_wrapper.query().bindings
 
     raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
@@ -142,6 +142,7 @@ def airport_detail(request, IRI):
         dbpedia_data = dbpedia_data[0]
 
     context = {
+        'page_title': airport_name,
         'airport_detail': raw_results[0],
         'dbpedia_data': dbpedia_data
     }
