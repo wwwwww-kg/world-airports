@@ -5,7 +5,7 @@ def get_airport_detail(airport_iri):
         PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
 
         SELECT ?airportName ?countryIRI ?airportType ?latitudeDeg ?longitudeDeg ?elevationFt ?hasScheduledService 
-            ?gpsCode ?airportLocalCode ?airportId ?municipality ?regionName ?countryName ?navAidName
+            ?gpsCode ?airportLocalCode ?airportId ?municipality ?regionName ?countryName ?navAidName ?airportIATA
         (GROUP_CONCAT(CONCAT(
            "", IF(BOUND(?runwayLengthInFt), str(?runwayLengthInFt), "-"), 
            " ", IF(BOUND(?runwayWidthInFt), str(?runwayWidthInFt), "-"), 
@@ -22,7 +22,8 @@ def get_airport_detail(airport_iri):
                     v:longitudeDeg ?longitudeDeg;
                     v:hasScheduledService ?hasScheduledService;
                     v:airportId ?airportId.
-            
+
+            OPTIONAL {{ <{airport_iri}> v:iataCode ?airportIATA. }}
             OPTIONAL {{ <{airport_iri}> v:elevationFt ?elevationFt. }}
             OPTIONAL {{ <{airport_iri}> v:municipality ?municipality. }}
             OPTIONAL {{ <{airport_iri}> v:gpsCode ?gpsCode. }}
@@ -34,6 +35,7 @@ def get_airport_detail(airport_iri):
                             v:widthFt ?runwayWidthInFt;
                             v:surfaceType ?runwaySurfaceType;
                             v:isLighted ?runwayIsLighted;
+                            v:leIdent ?runwayLeIdent;
                             v:isClosed ?runwayIsClosed.
                 }}
             }}
@@ -51,6 +53,6 @@ def get_airport_detail(airport_iri):
             }}
         }}
         GROUP BY ?airportName ?countryIRI ?regionName ?countryName ?airportType ?latitudeDeg ?longitudeDeg 
-                ?elevationFt ?hasScheduledService ?gpsCode ?airportLocalCode ?airportId ?municipality ?navAidName
+                ?elevationFt ?hasScheduledService ?gpsCode ?airportLocalCode ?airportId ?municipality ?navAidName ?airportIATA
         """
 
