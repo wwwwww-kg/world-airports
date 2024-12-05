@@ -1,0 +1,111 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<div class="container my-4">
+  <h1 class="mb-4">{{ airport_detail.airportName.value }}</h1>
+  <hr class="my-4" />
+  {% if dbpedia_data.abstract.value %}
+  <p>{{ dbpedia_data.abstract.value }}</p>
+  {% endif %}
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <tbody>
+        {% if airport_detail.airportType.value %}
+        <tr>
+          <th scope="row">Airport Type</th>
+          <td>{{ airport_detail.airportType.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.latitudeDeg.value %}
+        <tr>
+          <th scope="row">Latitude</th>
+          <td>{{ airport_detail.latitudeDeg.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.longitudeDeg.value %}
+        <tr>
+          <th scope="row">Longitude</th>
+          <td>{{ airport_detail.longitudeDeg.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.elevationFt.value %}
+        <tr>
+          <th scope="row">Elevation (ft)</th>
+          <td>{{ airport_detail.elevationFt.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.hasScheduledService.value %}
+        <tr>
+          <th scope="row">Scheduled Service</th>
+          <td>{{ airport_detail.hasScheduledService.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.gpsCode.value %}
+        <tr>
+          <th scope="row">GPS Code</th>
+          <td>{{ airport_detail.gpsCode.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.airportLocalCode.value %}
+        <tr>
+          <th scope="row">Local Code</th>
+          <td>{{ airport_detail.airportLocalCode.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.airportId.value %}
+        <tr>
+          <th scope="row">Airport ID</th>
+          <td>{{ airport_detail.airportId.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.municipality.value %}
+        <tr>
+          <th scope="row">Municipality</th>
+          <td>{{ airport_detail.municipality.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.regionName.value %}
+        <tr>
+          <th scope="row">Region Name</th>
+          <td>{{ airport_detail.regionName.value }}</td>
+        </tr>
+        {% endif %} {% if airport_detail.countryName.value %}
+        <tr>
+          <th scope="row">Country Name</th>
+          <td>
+            <a href="{% url 'country_detail' airport_detail.countryIRI.value %}"
+              >{{ airport_detail.countryName.value }}</a
+            >
+          </td>
+        </tr>
+        {% endif %} {% if airport_detail.navAidName.value %}
+        <tr>
+          <th scope="row">Nav Aid Name</th>
+          <td>{{ airport_detail.navAidName.value }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% if airport_detail.runways.value %}
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered text-center">
+      <tbody>
+        <tr>
+          <th scope="row" colspan="6">Runways</th>
+        </tr>
+        <tr>
+          <th scope="row"></th>
+          <th scope="row">Length in Feet</th>
+          <th scope="row">Width in Feet</th>
+          <th scope="row">Surface Type</th>
+          <th scope="row">is Lighted</th>
+          <th scope="row">is Closed</th>
+        </tr>
+        {% for runway in airport_detail.runways.value %}
+        <tr>
+          <th scope="row">{{ forloop.counter }}</th>
+          <td>{{ runway.length }}</td>
+          <td>{{ runway.width }}</td>
+          <td>{{ runway.surfaceType }}</td>
+          <td>{{ runway.isLighted }}</td>
+          <td>{{ runway.isClosed }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock content %}
