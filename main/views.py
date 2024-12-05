@@ -285,9 +285,10 @@ def country_detail(request, country_iri):
     SELECT DISTINCT ?airport_name ?region ?country_iri ?airport_iri WHERE {{
         ?airport_iri a [rdfs:label "Airport"];
                     rdfs:label ?airport_name ;
+                    v:airportType ?airport_type;
                     v:region ?region .
         ?region v:countryCode [v:country {country_iri}]
-    }}""")
+    }} LIMIT 100 """)
 
     airports = local_data_wrapper.query().bindings
 
