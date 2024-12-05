@@ -174,6 +174,13 @@ def process_runways(runways_data):
     return processed_runways
 
 def country_detail(request, country_iri):
+    climate_type_mapping = {
+        "1": "Dry tropical or tundra and ice, classification B and E",
+        "2": "Wet tropical, classification A",
+        "3": "Temperate humid subtropical and temperate continental, classification Cfa, Cwa, and D",
+        "4": "Dry hot summers and wet winters"
+    }
+
     ''' Menampilkan halaman detail negara '''
     
     # Initialize SPARQLWrapper for the first query
@@ -231,7 +238,11 @@ def country_detail(request, country_iri):
     }}""")
 
     country_details = local_data_wrapper.query().bindings
-
+    for item in country_details:
+        # Safely extract the climateType value
+        climate_value = item.get("climateType").value if item.get("climateType") else ""
+        # Map the climate value to its description
+        item["climateType_description"] = climate_type_mapping.get(climate_value, "Other Climate Classification")
     # Reinitialize SPARQLWrapper for the second query
     local_data_wrapper = SPARQLWrapper2(local_rdf)
     
