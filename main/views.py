@@ -185,6 +185,7 @@ def country_detail(request, country_iri):
     ''' Menampilkan halaman detail negara '''
     
     # Initialize SPARQLWrapper for the first query
+    country_iri_param = country_iri
     local_data_wrapper = SPARQLWrapper2(local_rdf)
     country_iri = country_iri.replace('_', ' ').title().replace(' ', '_')
     country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
@@ -241,11 +242,29 @@ def country_detail(request, country_iri):
 
     country_details = local_data_wrapper.query().bindings
     for item in country_details:
-        # Safely extract the climateType value
         climate_value = item.get("climateType").value if item.get("climateType") else ""
-        # Map the climate value to its description
         item["climateType_description"] = climate_type_mapping.get(climate_value, "Other Climate Classification")
-    # Reinitialize SPARQLWrapper for the second query
+
+        # List of numeric fields to format
+        numeric_fields = [
+            "populationCount", "netMigration", "infantMortalityRate", "gdpInUSD", "literacyPercentage", 
+            "phonesPerThousand", "arableLandPercentage", "cropsLandPercentage", "otherLandPercentage", 
+            "birthrate", "deathrate", "agricultureGDP", "industryGDP", "serviceGDP", "areaSize", "coastlineRatio", "populationDensity"
+        ]
+
+        for field in numeric_fields:
+            if field in item:
+                try:
+                    value = float(item[field].value)
+                    if value.is_integer():
+                        formatted_value = "{:,.0f}".format(value)
+                    else:  
+                        formatted_value = "{:,.3f}".format(value) 
+                    item[field].value = formatted_value
+                except ValueError:
+                    pass
+
+
     local_data_wrapper = SPARQLWrapper2(local_rdf)
     
     local_data_wrapper.setQuery(f"""                                 
@@ -264,26 +283,24 @@ def country_detail(request, country_iri):
     for airport in airports:
         airport["airport_iri"].value = replace_uri_with_iri(airport["airport_iri"].value)
 
-    dbpedia_country_name = country_iri.replace('_', ' ').title()
+    dbpedia_country_name = country_iri_param.replace('_', ' ').title()
     dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
     dbpedia_data_wrapper.setQuery("""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX dbp: <http://dbpedia.org/property/>
     PREFIX dbo: <http://dbpedia.org/ontology/>
 
-    SELECT ?resource_page ?abstract ?thumbnail ?conventionalLongName
+    SELECT ?resource_page ?thumbnail ?conventionalLongName
     WHERE {
         ?resource_page a <http://dbpedia.org/ontology/Country> ;
-                dbo:abstract ?abstract ;
                 dbo:thumbnail ?thumbnail ;
                 dbp:conventionalLongName ?conventionalLongName ;
                 rdfs:label "%s" @en .
-        FILTER (LANG(?abstract) = "en")
     } LIMIT 1
     """ % dbpedia_country_name)
 
     dbpedia_data = dbpedia_data_wrapper.query().bindings
- 
+     
     context = {
         'page_title': country_details[0]["countryName"].value,
         'country_details': country_details[0],
