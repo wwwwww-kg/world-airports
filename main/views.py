@@ -145,7 +145,8 @@ def airport_detail(request, airport_iri):
     context = {
         'page_title': airport_name,
         'airport_detail': raw_results[0],
-        'dbpedia_data': dbpedia_data
+        'dbpedia_data': dbpedia_data,
+        'airport_iri': airport_iri,
     }
 
     response = render(request, 'airport_detail.html', context)
