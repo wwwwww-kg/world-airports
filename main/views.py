@@ -83,7 +83,7 @@ def search(request):
 
         raw_results = local_data_wrapper.query().bindings
         MINIMUM_RATIO = 70
-        MAXIMUM_RESULTS = 5
+        MAXIMUM_RESULTS = 3
         legible_results = []
         for entry in raw_results:
             airport_name = entry["airport_name"].value

@@ -6,42 +6,45 @@
 
 {% include 'search_bar.html' %}
 
-<div class="mb-5 px-3">
-    <div class="search-results d-grid gap-2">        
-        {% if search_results %}
-            {% for i in search_results %}
-                <div class="card border-0">
-                    <div class="card-body p-0">
-                        <div class="card-title fw-normal align-items-center col">
-                            <a class="text-decoration-none fs-5 me-1" href="{% url 'airport_detail' airport_iri=i.airport_iri.value %}">{{ i.airport_name.value|highlight_query:request.GET.q }}</a>
-                            <span class="badge text-sm text-bg-primary">{{ i.airport_iri.value }}</span>
-                            <span class="badge text-sm text-bg-secondary">{{ i.airport_iata.value }}</span>
-                        </div>
-                        <h6 class="card-subtitle text-body-secondary">
-                             {{ i.region_name.value }}, {{ i.country_name.value }}
-                        </h6>
-                    </div>
+<div class="mb-2 px-3">
+    <div class="search-results d-grid gap-1">
+    {% if search_results %}
+        <span class="fs-6 text-center text-secondary">Showing {{ search_results|length }} results for <b>{{ request.GET.q }}</b></span>
+        {% for i in search_results %}
+        <div class="card border-0">
+            <div class="card-body p-0">
+                <div class="card-title fw-normal align-items-center col">
+                    <a class="text-decoration-none fs-5 me-1" href="{% url 'airport_detail' airport_iri=i.airport_iri.value %}">{{ i.airport_name.value|highlight_query:request.GET.q }}</a>
+                    <span class="badge text-sm text-bg-primary">{{ i.airport_iri.value }}</span>
+                    <span class="badge text-sm text-bg-secondary">{{ i.airport_iata.value }}</span>
                 </div>
-                <hr/>
-            {% endfor %}
-            {% if search_results|length >= 50 %}
-                <p class="fst-italic"><span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-info-circle mb-1 me-1" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                      </svg>
-                </span>Search limited to 50 results</p>
-            {% endif %}
-        {% else %}
-            <p>No airport found with the keyword <b>{{ request.GET.q }}</b></p>
+                <h6 class="card-subtitle text-body-secondary">
+                        {{ i.region_name.value }}, {{ i.country_name.value }}
+                </h6>
+            </div>
+        </div>
+        <hr/>
+        {% endfor %}
+        {% if search_results|length >= 50 %}
+        <p class="fst-italic text-secondary">
+        <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-info-circle mb-1 me-1" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                </svg>
+        </span>Search limited to 50 results. Please try searching with another keyword</p>
         {% endif %}
+    {% else %}
+        <span class="fs-6 mb-2">No airport found with the keyword <b>{{ request.GET.q }}</b></span>
+    {% endif %}
     </div>
+    
     <div class="search-suggestions">
         {% if similar_results %}
             <div class='fs-6'>
-                <span class='fs-6 fst-italic'>You might be looking for: </span>
+                <span class='fs-6 fst-italic text-secondary'>You might be looking for: </span>
                 {% for i in similar_results %}
-                    <a href="{% url 'airport_detail' airport_iri=i.airport_iri.value %}">{{ i.airport_name.value }}</a><span>, </span>
+                    <a href="{% url 'airport_detail' airport_iri=i.airport_iri.value %}" class="text-decoration-none me-2 fw-bold">{{ i.airport_name.value }}</a>
                 {% endfor %}
               </div>
         {% endif %}
