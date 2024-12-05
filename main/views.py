@@ -114,7 +114,7 @@ def airport_detail(request, airport_iri):
     ## Get airport details
     local_data_wrapper.setQuery(get_airport_detail(airport_iri))
     raw_results = local_data_wrapper.query().bindings
-
+    print(raw_results)
     raw_results[0]['countryIRI'].value = replace_uri_with_iri(raw_results[0]['countryIRI'].value)
     raw_results[0]['runways'].value = process_runways(raw_results[0]['runways'].value)
 
@@ -163,7 +163,7 @@ def process_runways(runways_data):
     runways = runways_data.split(";")
     processed_runways = []
 
-    if runways_data == "- - - - -":
+    if runways_data == "- - - - - -":
         return []
     
     for runway in runways:
@@ -176,7 +176,8 @@ def process_runways(runways_data):
             "width": runway_params[1] if len(runway_params) > 1 else "-",
             "surfaceType": runway_params[2] if len(runway_params) > 2 else "-",
             "isLighted": runway_params[3] if len(runway_params) > 3 else "-",
-            "isClosed": runway_params[4] if len(runway_params) > 4 else "-"
+            "isClosed": runway_params[4] if len(runway_params) > 4 else "-",
+            "lowerIdent": runway_params[5] if len(runway_params) > 5 else "-",
         }
 
         # Add the dictionary to the list of processed runways
