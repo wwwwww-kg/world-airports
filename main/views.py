@@ -98,12 +98,19 @@ def airport_detail(request):
     ''' Menampilkan halaman detail bandara '''
     return
 
-def country_detail(request, country_iri):
+def country_detail(request, country_iri_param):
     ''' Menampilkan halaman detail negara '''
     
     # Initialize SPARQLWrapper for the first query
+    ends_with_period = country_iri_param.endswith('.')
+    # print(country_iri_param)
     local_data_wrapper = SPARQLWrapper2(base_iri)
-    country_iri = country_iri.replace('_', ' ').title().replace(' ', '_')
+    country_iri = country_iri_param.replace('_', ' ').title().replace(' ', '_')
+    if("bosnia" in country_iri.lower()):
+        country_iri = "Bosnia_and_Herzegovina"
+
+    coutnry_iri = "Central_African_Rep."
+    print(country_iri)
     country_iri = "<http://world-airports-kg.up.railway.app/data/"+country_iri+">"
     
     # Construct the first query
@@ -157,10 +164,8 @@ def country_detail(request, country_iri):
 
     country_details = local_data_wrapper.query().bindings
 
-    # Reinitialize SPARQLWrapper for the second query
     local_data_wrapper = SPARQLWrapper2(base_iri)
     
-    # Construct the second query to get the airports related to the country
     local_data_wrapper.setQuery(f"""                                 
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX v: <http://world-airports-kg.up.railway.app/data/verb/>
@@ -177,8 +182,32 @@ def country_detail(request, country_iri):
     for airport in airports:
         airport["airport_iri"].value = replace_uri_with_iri(airport["airport_iri"].value)
 
+    dbpedia_country_name = country_iri_param.replace('_', ' ').title()
+    dbpedia_data_wrapper = SPARQLWrapper2("http://dbpedia.org/sparql")
+    dbpedia_data_wrapper.setQuery("""
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX dbp: <http://dbpedia.org/property/>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+
+    SELECT ?resource_page ?abstract ?thumbnail ?conventionalLongName
+    WHERE {
+        ?resource_page a <http://dbpedia.org/ontology/Country> ;
+                dbo:abstract ?abstract ;
+                dbo:thumbnail ?thumbnail ;
+                dbp:conventionalLongName ?conventionalLongName ;
+                rdfs:label "%s" @en .
+        FILTER (LANG(?abstract) = "en")
+    } LIMIT 1
+    """ % dbpedia_country_name)
+
+    dbpedia_data = dbpedia_data_wrapper.query().bindings
+
+    print(len(country_details))
+    print(len(airports))
+    
     context = {
         'country_details': country_details,
         'airports': airports,
+        'dbpedia_data': dbpedia_data
     }
     return render(request, 'country_detail.html', context)
