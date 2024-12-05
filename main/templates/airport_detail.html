@@ -9,7 +9,7 @@
       <div class="airport-info-box-wrapper col-12 col-md-5">
 {% else %}
 <div class="d-flex flex-md-row flex-column-reverse gap-4 justify-content-center">
-    <div class="airport-info-box-wrapper col-5">
+    <div class="airport-info-box-wrapper col-12 col-md-5">
 {% endif %}
     <div class="airport-info-box bg-light border border-secondary border-1 d-flex flex-column p-2 fs-6 w-100">
       <div class="bg-primary text-bg-primary text-center p-1">
@@ -20,7 +20,7 @@
       <div class="my-2 d-flex justify-content-center w-100">
         <img src="{{dbpedia_data.thumbnail.value}}" alt="Thumbnail of {{ airport_detail.airportName.value }}">
       </div>
-    {% endif %}
+      {% endif %}
 
       <div class="text-center mb-1">
         {% if airport_detail.airportIATA %}
